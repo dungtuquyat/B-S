@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-xrb#qs*xv=1i^6ntg$^8pow5j9b)q#7#b=o(z*ki6*&z-$cy7e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -75,14 +75,7 @@ WSGI_APPLICATION = 'BDSProject.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':  'postgres',
-        'USER':  'postgres',
-        'PASSWORD': '12345678',
-        'HOST':  'localhost',
-        'PORT':  '5432',
-    }
+       'default': dj_database_url.config(default=os.getenv("DATABASE_URL"))
 }
 
 

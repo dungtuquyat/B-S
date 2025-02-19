@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'BDSProject.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
+'default': dj_database_url.config(default="postgresql://postgres:12345678@localhost:5432/postgres")
 }
 
 

@@ -77,7 +77,14 @@ WSGI_APPLICATION = 'BDSProject.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-'default': dj_database_url.config(default="postgresql://postgres:12345678@localhost:5432/postgres")
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME':  'postgres',
+        'USER':  'postgres',
+        'PASSWORD': '12345678',
+        'HOST':  'dpg-cur030qj1k6c73cnfmh0-a',
+        'PORT':  '5432',
+    }
 }
 
 

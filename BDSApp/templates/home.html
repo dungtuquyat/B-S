@@ -1,0 +1,532 @@
+{% load static %}
+<!-- myapp/templates/myapp/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href= {% static "style.css" %} >
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-primary text-white">
+        <div class="container">
+            <!-- Menu Icon -->
+            <button class="btn text-white me-3" type="button">
+                <i class="bi bi-list"></i>
+            </button>
+    
+            <!-- Logo -->
+            <a class="navbar-brand text-white fw-bold" href="#">
+                <img src="logo.png" alt="Landsoft" width="120">
+            </a>
+    
+            <!-- Tiêu đề -->
+            <span class="ms-auto fw-bold text-warning">
+               HỆ THỐNG QUẢN LÝ BẤT ĐỘNG SẢN
+            </span>
+    
+            <!-- Biểu tượng -->
+            <div class="ms-auto d-flex align-items-center">
+                <button class="btn text-white"><i class="bi bi-arrows-fullscreen"></i></button>
+                <button class="btn text-white"><i class="bi bi-gear"></i></button>
+                <button class="btn text-white"><i class="bi bi-bell"></i></button>
+                <button class="btn text-white"><i class="bi bi-person"></i></button>
+            </div>
+        </div>
+    </nav>
+                
+    <!-- Slide bar -->
+    <div class="d-flex">
+    <div class="sidebar">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a href="{% url 'building' %}" class="nav-link menu-link"><i class="bi bi-house"></i> Quản lý toà nhà</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link menu-link"><i class="bi bi-people"></i> Nhân Viên <span class="badge bg-secondary"></span></a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'home' %}" class="nav-link menu-link" data-target="apartmentManagement"><i class="bi bi-briefcase"></i> Quản Lý Căn Hộ</a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'rental_management' %}" class="nav-link" ><i class="bi bi-person"></i> Quản Lý Cho Thuê</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link"><i class="bi bi-box"></i> Nhu Cầu Bán/Cho Thuê</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link"><i class="bi bi-cart"></i> Nhu Cầu Mua/Cần Thuê</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link"><i class="bi bi-cash"></i> Quản Lý Giao Dịch</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link"><i class="bi bi-clipboard-check"></i> Quản Lý Công Việc</a>
+            </li>
+
+    </div>
+    <div class="d-flex flex-grow-1 flex-column">
+        {% block content %}
+
+       <div id="apartmentManagement" class="p-3 flex-grow-1 " style="display: block;">
+        <div>
+            <!-- Tiêu đề -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Quản lý căn hộ</h4>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addApartmentModal">
+                    <i class="bi bi-plus"></i> Thêm căn hộ
+                </button>
+            </div>
+        
+            <!-- Tổng số phòng -->
+            <p class="fw-bold">Tổng số phòng: <span class="text-primary">4,873</span> phòng</p>
+
+            <form class="row g-3 align-items-center">
+                <!-- Ô tìm kiếm -->
+                <div class="col-md-4 mb-3">
+                    <input type="text" name="q" class="form-control" placeholder="Tìm kiếm phòng..." value="{{ query }}">
+                </div>
+            
+                <!-- Dropdown chọn tòa nhà -->
+                <div class="col-md-4 mb-3">
+                    <select name="building" class="form-select">
+                        <option value="">Chọn tòa nhà</option>
+                        {% for building in buildings %}
+                            <option value="{{ building.id }}" {% if building.id|stringformat:"s" == request.GET.building %}selected{% endif %}>
+                                {{ building.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            
+                <!-- Nút tìm kiếm -->
+                <div class="col-md-4 mb-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Tìm
+                    </button>
+                </div>
+            </form>
+            
+            
+            <!-- Bảng danh sách căn hộ -->
+            {% for apartment in page_obj %}
+                <div class="card p-3 mb-3">
+                    <div class="d-flex align-items-center">
+                        <!-- Ảnh căn hộ -->
+                        {% if apartment.image %}
+                        <img src="{{ apartment.image.url }}" alt="Căn hộ" class="img-thumbnail" style="height: 90px; width: 120px;">
+                    {% endif %}
+                    
+                        <!-- Thông tin căn hộ -->
+                        <div class="flex-grow-1">
+                            <h5> {{ apartment.room_name }}</h5>
+                            <p class="text-muted">
+                                <small>ID: {{ apartment.id }} | {{ apartment.building.address }}</small><br>
+                                Tên toàn nhà: {{ apartment.building.name }}
+                            </p>
+                        </div>
+
+                        <!-- Giá tiền -->
+                        <div class="text-end me-3">
+                            <p><strong class="text-success">{{ apartment.price_per_day }}₫</strong>/ngày</p>
+                            <p><strong class="text-primary">{{ apartment.price_per_month }}₫</strong>/tháng</p>
+                        </div>
+
+                        <!-- Trạng thái & nút Chi tiết -->
+                        <div>
+                            {% if apartment.available %}
+                                <span class="badge bg-success">Còn trống</span>
+                            {% else %}
+                                <span class="badge bg-danger">Đã thuê</span>
+                                
+                            {% endif %}
+                            <button class="btn btn-outline-secondary">👁 Chi tiết</button>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i> <!-- Icon dấu ba chấm -->
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item edit-btn" 
+                                       href="#" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#editApartmentModal"
+                                       data-id="{{ apartment.id }}"
+                                       data-room_name="{{ apartment.room_name }}"
+                                       data-floor="{{ apartment.floor }}"
+                                       data-price_per_day="{{ apartment.price_per_day }}"
+                                       data-price_per_month="{{ apartment.price_per_month }}"
+                                       data-description="{{ apartment.description }}"
+                                       data-building="{{ apartment.building.id }}"
+                                       data-image="{{ apartment.image|default:'' }}">
+                                       <i class="bi bi-pencil"></i> Chỉnh sửa
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger delete-btn" 
+                                       href="#" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#confirmDeleteModal"
+                                       data-id="{{ apartment.id }}">
+                                       <i class="bi bi-trash"></i> Xóa
+                                    </a>
+                                </li>
+                            </ul>
+                            
+                            
+                        </div>
+
+                     </div>
+                </div>
+            {% endfor %}
+           
+        </div>
+       
+
+    </div>
+
+
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1&q={{ request.GET.q }}&building={{ request.GET.building }}">«</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}&building={{ request.GET.building }}">‹</a>
+                </li>
+            {% endif %}
+    
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&q={{ request.GET.q }}&building={{ request.GET.building }}">{{ num }}</a>
+                    </li>
+                {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&q={{ request.GET.q }}&building={{ request.GET.building }}">{{ num }}</a>
+                    </li>
+                {% elif num == page_obj.number|add:-2 or num == page_obj.number|add:2 %}
+                    <li class="page-item disabled"><span class="page-link">..</span></li>
+                {% endif %}
+            {% endfor %}
+    
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}&building={{ request.GET.building }}">›</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&q={{ request.GET.q }}&building={{ request.GET.building }}">»</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+
+          <!-- Modal Xác nhận Xóa -->
+          <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmDeleteLabel">Xác nhận xóa</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Bạn có chắc chắn muốn xóa mục này không?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xóa</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    
+        <div class="modal fade" id="addApartmentModal" tabindex="-1" aria-labelledby="addApartmentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addApartmentModalLabel">Thêm Căn Hộ</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">        
+                        <div class="mb-3">
+                            <label for="room_name" class="form-label">Tên phòng</label>
+                            <input type="text" class="form-control" id="room_name" required>
+                        </div>
+        
+                        <div class="mb-3">
+                            <label for="floor" class="form-label">Tầng</label>
+                            <input type="number" class="form-control" id="floor" required>
+                        </div>
+        
+                        <div class="mb-3">
+                            <label for="price_per_day" class="form-label">Giá thuê theo ngày</label>
+                            <input type="number" class="form-control" id="price_per_day">
+                        </div>
+                        <div class="mb-3">
+                            <label for="price_per_month" class="form-label">Giá thuê theo tháng</label>
+                            <input type="number" class="form-control" id="price_per_month">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="building" class="form-label">Tòa nhà</label>
+                            <select class="form-select" id="building" required>
+                                {% for building in buildings %}
+                                    <option value="{{ building.id }}">{{ building.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Ảnh phòng</label>
+                            <input type="file" class="form-control" id="image" accept="image/*">
+                        </div> 
+
+                          <!-- Mô tả -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Mô tả</label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+        
+                        <button id="saveApartmentBtn" class="btn btn-success">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Chỉnh Sửa Căn Hộ -->
+            <div class="modal fade" id="editApartmentModal" tabindex="-1" aria-labelledby="editApartmentModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editApartmentModalLabel">Chỉnh sửa căn hộ</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editApartmentForm">
+                                <input type="hidden" id="edit_apartment_id">
+
+                                <div class="mb-3">
+                                    <label for="edit_room_name" class="form-label">Tên phòng</label>
+                                    <input type="text" class="form-control" id="edit_room_name">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_image" class="form-label">Ảnh phòng</label>
+                                    <input type="file" class="form-control" id="edit_image" accept="image/*">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Ảnh hiện tại</label>
+                                    <img id="edit_image_preview" src="" alt="Ảnh phòng" class="img-fluid rounded">
+                                </div>
+                                
+
+                                <div class="mb-3">
+                                    <label for="edit_floor" class="form-label">Tầng</label>
+                                    <input type="number" class="form-control" id="edit_floor">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_price_per_day" class="form-label">Giá theo ngày</label>
+                                    <input type="number" class="form-control" id="edit_price_per_day">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_price_per_month" class="form-label">Giá theo tháng</label>
+                                    <input type="number" class="form-control" id="edit_price_per_month">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_description" class="form-label">Mô tả</label>
+                                    <textarea class="form-control" id="edit_description"></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="edit_building" class="form-label">Tòa nhà</label>
+                                    <select class="form-select" id="edit_building">
+                                        {% for building in buildings %}
+                                            <option value="{{ building.id }}">{{ building.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                
+      
+          
+       
+
+    </div> 
+
+    
+
+
+    <script>
+        
+
+         document.addEventListener("DOMContentLoaded", function () {
+            let deleteId = null;
+    
+            // Khi bấm nút "Xóa" trong dropdown
+            document.querySelectorAll(".delete-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    deleteId = this.getAttribute("data-id");
+                });
+            });
+    
+            // Khi xác nhận xóa
+            document.getElementById("confirmDeleteBtn").addEventListener("click", function () {
+                if (deleteId) {
+                    fetch(`/delete-apartment/${deleteId}/`, {
+                        method: "DELETE",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                            "Content-Type": "application/json"
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload(); // Reload trang sau khi xóa
+                        } else {
+                            alert("Lỗi: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Lỗi:", error);
+                        alert("Có lỗi xảy ra, vui lòng thử lại!");
+                    });
+                }
+            });
+        });
+
+        document.getElementById("saveApartmentBtn").addEventListener("click", function (event) {
+            event.preventDefault();
+        
+            const formData = new FormData();
+            formData.append("room_name", document.getElementById("room_name").value);
+            formData.append("floor", document.getElementById("floor").value);
+            formData.append("price_per_day", document.getElementById("price_per_day").value);
+            formData.append("price_per_month", document.getElementById("price_per_month").value);
+            formData.append("description", document.getElementById("description").value);
+            formData.append("building", document.getElementById("building").value);
+        
+            const imageInput = document.getElementById("image").files[0]; // Lấy file ảnh
+            if (imageInput) {
+                formData.append("image", imageInput);
+            }
+        
+            fetch("{% url 'add_apartment' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}" // Không đặt "Content-Type"
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Success:", data);
+                alert("Thêm căn hộ thành công!");
+                location.reload(); // Reload trang để cập nhật danh sách
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Lắng nghe sự kiện click trên nút "Chỉnh sửa"
+            document.querySelectorAll(".edit-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    // Lấy thông tin từ data-attribute của nút "Chỉnh sửa"
+                    let apartmentId = this.getAttribute("data-id");
+                    let roomName = this.getAttribute("data-room_name");
+                    let floor = this.getAttribute("data-floor");
+                    let pricePerDay = this.getAttribute("data-price_per_day");
+                    let pricePerMonth = this.getAttribute("data-price_per_month");
+                    let description = this.getAttribute("data-description");
+                    let building = this.getAttribute("data-building");
+                    let imageSrc = this.getAttribute("data-image"); // Lấy ảnh
+
+        
+                    // Đặt giá trị vào modal
+                    document.getElementById("edit_apartment_id").value = apartmentId;
+                    document.getElementById("edit_room_name").value = roomName;
+                    document.getElementById("edit_floor").value = floor;
+                    document.getElementById("edit_price_per_day").value = pricePerDay;
+                    document.getElementById("edit_price_per_month").value = pricePerMonth;
+                    document.getElementById("edit_description").value = description;
+                    document.getElementById("edit_building").value = building;
+        
+                    // Cập nhật ảnh hiển thị
+                    let imagePreview = document.getElementById("edit_image_preview");
+                    if (imageSrc && imageSrc.trim() !== "") {
+                        console.log("Ảnh tồn tại:", imageSrc); // Kiểm tra đường dẫn ảnh trong console
+                        imagePreview.src = "/media/" + imageSrc;  // Thêm /media/ vào đường dẫn ảnh
+                        imagePreview.style.display = "block";
+                    } else {
+                        console.log("Không có ảnh hoặc đường dẫn ảnh trống!"); 
+                        imagePreview.style.display = "none";
+                    }
+
+
+                    
+            
+                });
+            });
+        });
+        
+    
+            // Gửi request cập nhật dữ liệu khi submit form
+            document.getElementById("editApartmentForm").addEventListener("submit", function (event) {
+                event.preventDefault();
+            
+                let formData = new FormData();
+                formData.append("room_name", document.getElementById("edit_room_name").value);
+                formData.append("floor", document.getElementById("edit_floor").value);
+                formData.append("price_per_day", document.getElementById("edit_price_per_day").value);
+                formData.append("price_per_month", document.getElementById("edit_price_per_month").value);
+                formData.append("description", document.getElementById("edit_description").value);
+                formData.append("building", document.getElementById("edit_building").value);
+                formData.append("image", document.getElementById("edit_image").files[0]);  // Ảnh mới
+            
+                let apartmentId = document.getElementById("edit_apartment_id").value;
+            
+                fetch(`/update-apartment/${apartmentId}/`, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"  // CSRF token cho Django
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert("Cập nhật thành công!");
+                    location.reload();  // Reload trang để cập nhật thông tin mới
+                })
+                .catch(error => console.error("Lỗi khi cập nhật:", error));
+            });
+            
+
+    </script>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,464 @@
+{% extends "home.html" %}
+
+{% block content %}
+<div id="rentalManagement" class="content-section p-3 flex-grow-1" style="display:block ;">
+    <h4>Quản Lý Cho Thuê </h4>
+
+    <form class="row g-3 align-items-center">
+        <!-- Ô tìm kiếm -->
+        <div class="col-md-4 mb-3">
+            <input type="text" name="q" class="form-control" placeholder="Tìm kiếm phòng..." value="{{ query }}">
+        </div>
+    
+       <!-- Dropdown chọn trạng thái -->
+        <div class="col-md-4 mb-3">
+            <select name="status" class="form-select">
+                <option value="">Chọn trạng thái</option>
+                <option value="available" {% if request.GET.status == "available" %}selected{% endif %}>Còn trống</option>
+                <option value="rented" {% if request.GET.status == "rented" %}selected{% endif %}>Đã thuê</option>
+            </select>
+        </div>
+
+    
+        <!-- Nút tìm kiếm -->
+        <div class="col-md-4 mb-3">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Tìm
+            </button>
+        </div>
+    </form>
+    {% for apartment in page_obj %}
+    <div class="card p-3 mb-3">
+        <div class="d-flex align-items-center">
+            <!-- Ảnh căn hộ -->
+            {% if apartment.image %}
+            <img src="{{ apartment.image.url }}" alt="Căn hộ" class="img-thumbnail" style="height: 90px; width: 120px;">
+        {% endif %}
+        
+            <!-- Thông tin căn hộ -->
+            <div class="flex-grow-1">
+                <h5> {{ apartment.room_name }}</h5>
+                <p class="text-muted">
+                    <small>ID: {{ apartment.id }} | {{ apartment.building.address }}</small><br>
+                    Tên toàn nhà: {{ apartment.building.name }}
+                </p>
+            </div>
+
+            <!-- Giá tiền -->
+            <div class="text-end me-3">
+                <p><strong class="text-success">{{ apartment.price_per_day }}₫</strong>/ngày</p>
+                <p><strong class="text-primary">{{ apartment.price_per_month }}₫</strong>/tháng</p>
+            </div>
+
+            <!-- Trạng thái & nút Chi tiết -->
+            <div>
+                {% if apartment.available %}
+                    <span class="badge bg-success">Còn trống</span>
+                {% else %}
+                    <span class="badge bg-danger">Đã thuê</span>
+                    
+                {% endif %}
+                <button class="btn btn-outline-secondary">👁 Chi tiết</button>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-three-dots-vertical"></i> <!-- Icon dấu ba chấm -->
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item edit-btn" 
+                           href="#" 
+                           data-bs-toggle="modal" 
+                           data-bs-target="#editApartmentModal"
+                           data-id="{{ apartment.id }}"
+                           data-room_name="{{ apartment.room_name }}"
+                           data-floor="{{ apartment.floor }}"
+                           data-price_per_day="{{ apartment.price_per_day }}"
+                           data-price_per_month="{{ apartment.price_per_month }}"
+                           data-description="{{ apartment.description }}"
+                           data-building="{{ apartment.building.id }}"
+                           data-image="{{ apartment.image|default:'' }}">
+                           <i class="bi bi-pencil"></i> Chỉnh sửa
+                        </a>
+                    </li>
+                    
+                    {% if apartment.available %}
+                        <!-- Còn trống: Hiển thị nút Thêm khách hàng -->
+                        <li>
+                            <a class="dropdown-item text-success add-customer-btn" 
+                               href="#" 
+                               data-bs-toggle="modal" 
+                               data-bs-target="#addCustomerModal"
+                               data-apartment-id="{{ apartment.id }}"
+                               data-price-per-day="{{ apartment.price_per_day }}"
+                               data-price-per-month="{{ apartment.price_per_month }}">
+                               <i class="bi bi-person-plus"></i> Thêm khách hàng
+                            </a>
+                        </li>
+                    {% else %}
+                        <!-- Đã thuê: Hiển thị nút Chỉnh sửa khách hàng -->
+                        <li>
+                            <a class="dropdown-item text-warning edit-customer-btn" 
+                               href="#" 
+                               data-bs-toggle="modal" 
+                               data-bs-target="#editCustomerModal"
+                               data-apartment-id="{{ apartment.id }}">
+                               <i class="bi bi-person"></i> Chỉnh sửa khách hàng
+                            </a>
+                        </li>
+                    {% endif %}
+            
+                    <li>
+                        <a class="dropdown-item text-danger delete-btn" 
+                           href="#" 
+                           data-bs-toggle="modal" 
+                           data-bs-target="#confirmDeleteModal"
+                           data-id="{{ apartment.id }}">
+                           <i class="bi bi-trash"></i> Xóa
+                        </a>
+                    </li>
+                </ul>
+            </div>
+         </div>
+    </div>
+{% endfor %}
+
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&q={{ request.GET.q }}&building={{ request.GET.building }}">«</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}&building={{ request.GET.building }}">‹</a>
+            </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2 %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}&q={{ request.GET.q }}&building={{ request.GET.building }}">{{ num }}</a>
+                </li>
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}&q={{ request.GET.q }}&building={{ request.GET.building }}">{{ num }}</a>
+                </li>
+            {% elif num == page_obj.number|add:-2 or num == page_obj.number|add:2 %}
+                <li class="page-item disabled"><span class="page-link">..</span></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}&building={{ request.GET.building }}">›</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&q={{ request.GET.q }}&building={{ request.GET.building }}">»</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+</div>
+<!-- Modal Thêm Khách Hàng -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCustomerLabel">Thêm khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCustomerForm">
+                    <!-- Phần 1: Thông tin khách hàng -->
+                    <h5>Thông tin khách hàng</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" name="customer_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control" name="phone_number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CMND/CCCD</label>
+                            <input type="text" class="form-control" name="id_card">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Phần 2: Thông tin Booking -->
+                    <h5>Thông tin Booking</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Loại thuê</label>
+                        <select class="form-select" name="booking_type" id="bookingType">
+                            <option value="daily">Trả theo ngày</option>
+                            <option value="monthly">Thuê theo tháng</option>
+                        </select>
+                    </div>
+
+                    <!-- Booking Section -->
+                    <div id="BookingSection">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Ngày bắt đầu</label>
+                                <input type="date" class="form-control" name="date_check_in" id="dateCheckIn">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ngày kết thúc</label>
+                                <input type="date" class="form-control" name="date_check_out" id="dateCheckOut">
+                            </div>
+                            <div class="col-md-12 mt-3">
+                                <p><strong>Giá thuê:</strong> <span id="pricePerUnit"></span></p>
+                                <p><strong>Tổng tiền:</strong> <span id="totalPrice"></span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <button type="submit" class="btn btn-primary">Lưu khách hàng</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chỉnh sửa khách hàng -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCustomerModalLabel">Chỉnh sửa khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCustomerForm">
+                    <input type="hidden" name="apartment_id" id="editApartmentId">
+                    <input type="hidden" name="customer_id" id="editCustomerId">
+
+                    <!-- Thông tin khách hàng -->
+                    <h5>Thông tin khách hàng</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" name="customer_name" id="editCustomerName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control" name="phone_number" id="editPhoneNumber" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" id="editEmail">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">CMND/CCCD</label>
+                            <input type="text" class="form-control" name="id_card" id="editIdCard">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Thông tin Booking -->
+                    <h5>Thông tin Booking</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Loại thuê</label>
+                        <select class="form-select" name="booking_type" id="editBookingType">
+                            <option value="daily">Trả theo ngày</option>
+                            <option value="monthly">Thuê theo tháng</option>
+                        </select>
+                    </div>
+
+                    <div id="editBookingSection">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Ngày bắt đầu</label>
+                                <input type="date" class="form-control" name="date_check_in" id="editDateCheckIn">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ngày kết thúc</label>
+                                <input type="date" class="form-control" name="date_check_out" id="editDateCheckOut">
+                            </div>
+                            <div class="col-md-12 mt-3">
+                                <p><strong>Giá thuê:</strong> <span id="editPricePerUnit"></span></p>
+                                <p><strong>Tổng tiền:</strong> <span id="editTotalPrice"></span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    <button type="button" class="btn btn-danger" id="cancelCustomerBtn">Huỷ khách hàng</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const bookingType = document.getElementById("bookingType");
+        const dateCheckIn = document.getElementById("dateCheckIn");
+        const dateCheckOut = document.getElementById("dateCheckOut");
+        const totalPrice = document.getElementById("totalPrice");
+        const pricePerUnit = document.getElementById("pricePerUnit");
+        const addCustomerModal = document.getElementById("addCustomerModal");
+    
+        let pricePerDay = 0;
+        let pricePerMonth = 0;
+    
+        // Cập nhật giá thuê từ data-* attributes khi mở modal
+        addCustomerModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget; // Nút mở modal
+            pricePerDay = parseFloat(button.getAttribute("data-price-per-day")) || 0;
+            pricePerMonth = parseFloat(button.getAttribute("data-price-per-month")) || 0;
+    
+            updatePriceDisplay(); // Cập nhật giá ngay khi mở modal
+            calculateTotalPrice(); // Reset tổng tiền về 0₫
+        });
+    
+        // Cập nhật giá thuê theo ngày hoặc tháng
+        function updatePriceDisplay() {
+            if (bookingType.value === "daily") {
+                pricePerUnit.textContent = `${pricePerDay.toLocaleString()}₫ / ngày`;
+            } else {
+                pricePerUnit.textContent = `${pricePerMonth.toLocaleString()}₫ / tháng`;
+            }
+        }
+    
+        // Tính tổng tiền thuê
+        function calculateTotalPrice() {
+            const checkInDate = new Date(dateCheckIn.value);
+            const checkOutDate = new Date(dateCheckOut.value);
+    
+            if (bookingType.value === "daily" && checkInDate && checkOutDate && checkOutDate > checkInDate) {
+                const days = (checkOutDate - checkInDate) / (1000 * 60 * 60 * 24);
+                totalPrice.textContent = `${(days * pricePerDay).toLocaleString()}₫`;
+            } else if (bookingType.value === "monthly") {
+                totalPrice.textContent = `${pricePerMonth.toLocaleString()}₫`;
+            } else {
+                totalPrice.textContent = "0₫";
+            }
+        }
+    
+        // Sự kiện thay đổi loại thuê
+        bookingType.addEventListener("change", () => {
+            updatePriceDisplay();
+            calculateTotalPrice();
+        });
+    
+        // Sự kiện thay đổi ngày để tính tổng tiền
+        dateCheckIn.addEventListener("change", calculateTotalPrice);
+        dateCheckOut.addEventListener("change", calculateTotalPrice);
+    });
+    
+    document.getElementById("addCustomerForm").addEventListener("submit", function (event) {
+        event.preventDefault();  // Ngăn form reload trang
+    
+        let formData = new FormData(this);
+        let apartmentId = document.querySelector(".add-customer-btn").getAttribute("data-apartment-id");
+        formData.append("apartment_id", apartmentId);
+    
+        fetch("/create_booking/", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}" // Lấy CSRF token từ cookie
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Đã thêm khách hàng và đặt phòng thành công!");
+                location.reload();  // Reload trang sau khi tạo thành công
+            } else {
+                alert("Có lỗi xảy ra: " + data.error);
+            }
+        })
+        .catch(error => console.error("Lỗi:", error));
+    });
+    
+    document.querySelectorAll(".edit-customer-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            let apartmentId = this.getAttribute("data-apartment-id");
+    
+            // Gọi API lấy thông tin khách hàng từ Django
+            fetch(`/get_customer_by_apartment/${apartmentId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let customer = data.customer;
+                        let booking = data.booking;
+    
+                        // Điền thông tin khách hàng vào form
+                        document.getElementById("editApartmentId").value = apartmentId;
+                        document.getElementById("editCustomerId").value = customer.id;
+                        document.getElementById("editCustomerName").value = customer.full_name;
+                        document.getElementById("editPhoneNumber").value = customer.phone;
+                        document.getElementById("editEmail").value = customer.email;
+                        document.getElementById("editIdCard").value = customer.cccd;
+    
+                        // Điền thông tin booking
+                        document.getElementById("editBookingType").value = booking.type;
+                        document.getElementById("editDateCheckIn").value = booking.date_check_in;
+                        document.getElementById("editDateCheckOut").value = booking.date_check_out;
+    
+                        let pricePerDay = parseFloat(data.price_per_day);
+                        let pricePerMonth = parseFloat(data.price_per_month);
+    
+                        if (booking.type === "daily") {
+                            document.getElementById("editPricePerUnit").textContent = pricePerDay.toLocaleString() + "₫ / ngày";
+                            let days = (new Date(booking.date_check_out) - new Date(booking.date_check_in)) / (1000 * 60 * 60 * 24);
+                            document.getElementById("editTotalPrice").textContent = (days * pricePerDay).toLocaleString() + "₫";
+                        } else {
+                            document.getElementById("editPricePerUnit").textContent = pricePerMonth.toLocaleString() + "₫ / tháng";
+                            document.getElementById("editTotalPrice").textContent = (pricePerMonth).toLocaleString() + "₫";
+                        }
+                    } else {
+                        alert("Không tìm thấy thông tin khách hàng!");
+                    }
+                })
+                .catch(error => console.error("Lỗi:", error));
+        });
+    });
+
+    document.getElementById("editCustomerForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+    
+        let formData = new FormData(this);
+    
+        fetch("/update_customer/", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Cập nhật thành công!");
+                location.reload();
+            } else {
+                alert("Lỗi: " + data.error);
+            }
+        })
+        .catch(error => console.error("Lỗi:", error));
+    });
+    
+          
+    
+</script>
+
+
+
+{% endblock %}

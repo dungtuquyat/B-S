@@ -1,0 +1,214 @@
+{% extends 'home.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2 class="d-inline-block">Danh sách Tòa Nhà</h2>
+        </div>
+        <div class="col text-end">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBuildingModal">
+                <i class="bi bi-plus-lg"></i> Thêm Tòa Nhà
+            </button>
+        </div>
+    </div>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Ảnh</th>
+                <th>Tên Tòa Nhà</th>
+                <th>Địa Chỉ</th>
+                <th>Hành động</th> <!-- Cột mới -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for building in buildings %}
+            <tr>
+                <td>
+                    {% if building.image %}
+                        <img src="{{ building.image.url }}" alt="Hình ảnh" class="img-thumbnail" width="100">
+                    {% endif %}
+                </td>
+                <td>{{ building.name }}</td>
+                <td>{{ building.address }}</td>
+                <td>
+                    <a href="#" 
+                    class="btn btn-warning btn-sm edit-building-btn" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#editBuildingModal"
+                    data-id="{{ building.id }}"
+                    data-name="{{ building.name }}"
+                    data-address="{{ building.address }}"
+                    data-image="{% if building.image %}{{ building.image.url }}{% endif %}">
+                    <i class="bi bi-pencil"></i> Sửa
+                 </a>
+                 <a href="#" class="btn btn-danger btn-sm delete-building" 
+                 data-building-id="{{ building.id }}" 
+                 data-has-apartment="{% if building.apartments.all %}1{% else %}0{% endif %}">
+                 <i class="bi bi-trash"></i> Xóa
+              </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Thêm Tòa Nhà -->
+<div class="modal fade" id="addBuildingModal" tabindex="-1" aria-labelledby="addBuildingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addBuildingModalLabel">Thêm Tòa Nhà</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addBuildingForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Tên Tòa Nhà</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa Chỉ</label>
+                        <textarea class="form-control" name="address" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hình Ảnh</label>
+                        <input type="file" class="form-control" name="image">
+                    </div>
+                    <button type="submit" class="btn btn-success">Lưu</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa Tòa Nhà -->
+<div class="modal fade" id="editBuildingModal" tabindex="-1" aria-labelledby="editBuildingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editBuildingModalLabel">Chỉnh Sửa Tòa Nhà</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editBuildingForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="building_id" id="editBuildingId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Tên Tòa Nhà</label>
+                        <input type="text" class="form-control" name="name" id="editBuildingName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa Chỉ</label>
+                        <textarea class="form-control" name="address" id="editBuildingAddress" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hình Ảnh</label>
+                        <input type="file" class="form-control" name="image">
+                        <img id="editBuildingImage" src="" alt="Hình ảnh" class="img-thumbnail mt-2" width="100">
+                    </div>
+                    <button type="submit" class="btn btn-success">Cập Nhật</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.getElementById("addBuildingForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Ngăn chặn load lại trang
+        
+        let formData = new FormData(this); // Thu thập dữ liệu từ form
+    
+        fetch("{% url 'add_building' %}", {  // Đường dẫn đến view xử lý thêm tòa nhà
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Thêm tòa nhà thành công!");
+                location.reload();  // Load lại trang để cập nhật danh sách
+            } else {
+                alert("Lỗi: " + data.error);
+            }
+        })
+        .catch(error => console.error("Lỗi:", error));
+    });
+
+    document.querySelectorAll(".edit-building-btn").forEach(button => {
+        button.addEventListener("click", function() {
+            // Lấy dữ liệu từ button
+            let buildingId = this.getAttribute("data-id");
+            let buildingName = this.getAttribute("data-name");
+            let buildingAddress = this.getAttribute("data-address");
+            let buildingImage = this.getAttribute("data-image");
+    
+            // Đổ dữ liệu vào modal
+            document.getElementById("editBuildingId").value = buildingId;
+            document.getElementById("editBuildingName").value = buildingName;
+            document.getElementById("editBuildingAddress").value = buildingAddress;
+    
+            // Hiển thị ảnh nếu có
+            let imgTag = document.getElementById("editBuildingImage");
+            if (buildingImage) {
+                imgTag.src = buildingImage;
+                imgTag.style.display = "block";
+            } else {
+                imgTag.style.display = "none";
+            }
+        });
+    });
+    
+    // Gửi dữ liệu chỉnh sửa bằng Fetch API
+    document.getElementById("editBuildingForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+    
+        let formData = new FormData(this);
+    
+        fetch("{% url 'edit_building' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Cập nhật thành công!");
+                location.reload();  // Load lại trang để cập nhật
+            } else {
+                alert("Lỗi: " + data.error);
+            }
+        })
+        .catch(error => console.error("Lỗi:", error));
+    });
+        
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".delete-building").forEach(button => {
+            button.addEventListener("click", function (event) {
+                event.preventDefault();
+                let hasApartment = this.getAttribute("data-has-apartment");
+                let buildingId = this.getAttribute("data-building-id");
+
+                if (hasApartment === "1") {
+                    alert("Hãy xoá hết căn hộ trước khi xoá tòa nhà.");
+                } else {
+                    if (confirm("Bạn có chắc chắn muốn xóa?")) {
+                        window.location.href = "/delete-building/" + buildingId + "/";
+                    }
+                }
+            });
+        });
+    });
+    </script>
+    
+{% endblock %}

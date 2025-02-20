@@ -34,7 +34,7 @@ class Booking(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="bookings")  # Khách hàng đặt phòng
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name="bookings")  # Phòng được đặt
     date_check_in = models.DateField()  # Ngày nhận phòng
-    date_check_out = models.DateField()  # Ngày trả phòng
+    date_check_out = models.DateField(null=True, blank=True)  # Cho phép NULL
 
     class Meta:
         unique_together = ('apartment', 'date_check_in', 'date_check_out')  # Đảm bảo không có trùng lịch đặt

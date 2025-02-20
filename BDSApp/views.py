@@ -268,6 +268,7 @@ def delete_booking(request):
 
 def building(request):
     buildings = Building.objects.all()
+    buildings = buildings.order_by("-id")  # Sắp xếp theo ID giảm dần (căn hộ mới nhất lên đầu)
     paginator = Paginator(buildings, 3)  # Mỗi trang hiển thị 5 tòa nhà
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)

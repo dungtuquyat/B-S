@@ -12,17 +12,18 @@
             </button>
         </div>
     </div>
+
     <table class="table table-bordered">
-        <thead class="table-dark">
+        <thead style="background-color: #ADD8E6; color: black;">
             <tr>
                 <th>Ảnh</th>
                 <th>Tên Tòa Nhà</th>
                 <th>Địa Chỉ</th>
-                <th>Hành động</th> <!-- Cột mới -->
+                <th>Hành động</th> 
             </tr>
         </thead>
         <tbody>
-            {% for building in buildings %}
+            {% for building in page_obj %} <!-- Chỉ lặp với page_obj -->
             <tr>
                 <td>
                     {% if building.image %}
@@ -32,27 +33,55 @@
                 <td>{{ building.name }}</td>
                 <td>{{ building.address }}</td>
                 <td>
-                    <a href="#" 
-                    class="btn btn-warning btn-sm edit-building-btn" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#editBuildingModal"
-                    data-id="{{ building.id }}"
-                    data-name="{{ building.name }}"
-                    data-address="{{ building.address }}"
-                    data-image="{% if building.image %}{{ building.image.url }}{% endif %}">
-                    <i class="bi bi-pencil"></i> Sửa
-                 </a>
-                 <a href="#" class="btn btn-danger btn-sm delete-building" 
-                 data-building-id="{{ building.id }}" 
-                 data-has-apartment="{% if building.apartments.all %}1{% else %}0{% endif %}">
-                 <i class="bi bi-trash"></i> Xóa
-              </a>
+                    <a href="#" class="btn btn-warning btn-sm edit-building-btn" 
+                       data-bs-toggle="modal" 
+                       data-bs-target="#editBuildingModal"
+                       data-id="{{ building.id }}"
+                       data-name="{{ building.name }}"
+                       data-address="{{ building.address }}"
+                       data-image="{% if building.image %}{{ building.image.url }}{% endif %}">
+                        <i class="bi bi-pencil"></i> Sửa
+                    </a>
+                    <a href="#" class="btn btn-danger btn-sm delete-building" 
+                       data-building-id="{{ building.id }}" 
+                       data-has-apartment="{% if building.apartments.all %}1{% else %}0{% endif %}">
+                        <i class="bi bi-trash"></i> Xóa
+                    </a>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- Phân trang -->
+    <nav>
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">« First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹ Prev</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next ›</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last »</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
+
+
 
 <!-- Modal Thêm Tòa Nhà -->
 <div class="modal fade" id="addBuildingModal" tabindex="-1" aria-labelledby="addBuildingModalLabel" aria-hidden="true">

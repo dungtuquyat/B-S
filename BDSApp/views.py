@@ -267,8 +267,11 @@ def delete_booking(request):
     return JsonResponse({"success": False, "error": "Phương thức không hợp lệ!"})
 
 def building(request):
-    buildings = Building.objects.all()  # Lấy danh sách tất cả tòa nhà
-    return render(request, 'building.html', {'buildings': buildings})
+    buildings = Building.objects.all()
+    paginator = Paginator(buildings, 3)  # Mỗi trang hiển thị 5 tòa nhà
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'building.html', {'page_obj': page_obj})
 
 @csrf_exempt
 def add_building(request):

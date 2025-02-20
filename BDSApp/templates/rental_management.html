@@ -32,7 +32,7 @@
         <div class="d-flex align-items-center">
             <!-- Ảnh căn hộ -->
             {% if apartment.image %}
-            <img src="{{ apartment.image.url }}" alt="Căn hộ" class="img-thumbnail" style="height: 90px; width: 120px;">
+            <img src="{{ apartment.image.url }}" alt="Căn hộ" class="img-thumbnail me-3" style="height: 90px; width: 120px;">
         {% endif %}
         
             <!-- Thông tin căn hộ -->
@@ -58,29 +58,14 @@
                     <span class="badge bg-danger">Đã thuê</span>
                     
                 {% endif %}
-                <button class="btn btn-outline-secondary">👁 Chi tiết</button>
+                {% comment %} <button class="btn btn-outline-secondary">👁 Chi tiết</button> {% endcomment %}
             </div>
             <div class="dropdown">
                 <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-three-dots-vertical"></i> <!-- Icon dấu ba chấm -->
                 </button>
                 <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item edit-btn" 
-                           href="#" 
-                           data-bs-toggle="modal" 
-                           data-bs-target="#editApartmentModal"
-                           data-id="{{ apartment.id }}"
-                           data-room_name="{{ apartment.room_name }}"
-                           data-floor="{{ apartment.floor }}"
-                           data-price_per_day="{{ apartment.price_per_day }}"
-                           data-price_per_month="{{ apartment.price_per_month }}"
-                           data-description="{{ apartment.description }}"
-                           data-building="{{ apartment.building.id }}"
-                           data-image="{{ apartment.image|default:'' }}">
-                           <i class="bi bi-pencil"></i> Chỉnh sửa
-                        </a>
-                    </li>
+
                     
                     {% if apartment.available %}
                         <!-- Còn trống: Hiển thị nút Thêm khách hàng -->
@@ -110,12 +95,13 @@
             
                     <li>
                         <a class="dropdown-item text-danger delete-btn" 
-                           href="#" 
-                           data-bs-toggle="modal" 
-                           data-bs-target="#confirmDeleteModal"
-                           data-id="{{ apartment.id }}">
-                           <i class="bi bi-trash"></i> Xóa
-                        </a>
+                        href="#" 
+                        data-id="{{ apartment.id }}"
+                        data-room_name="{{ apartment.room_name }}"
+                        onclick="confirmDeleteCustomer(this)">
+                        <i class="bi bi-trash"></i> Xóa
+                     </a>
+                     
                     </li>
                 </ul>
             </div>
@@ -361,12 +347,25 @@
         dateCheckOut.addEventListener("change", calculateTotalPrice);
     });
     
+    document.querySelectorAll(".add-customer-btn").forEach(button => {
+        button.addEventListener("click", function() {
+            selectedApartmentId = this.getAttribute("data-apartment-id"); // Lưu ID của căn hộ được nhấn
+            console.log("Giá trị của data-apartment-id khi nhấn:", selectedApartmentId);
+        });
+    });
+    
+
     document.getElementById("addCustomerForm").addEventListener("submit", function (event) {
         event.preventDefault();  // Ngăn form reload trang
     
         let formData = new FormData(this);
-        let apartmentId = document.querySelector(".add-customer-btn").getAttribute("data-apartment-id");
-        formData.append("apartment_id", apartmentId);
+    
+    // Dùng giá trị đã lưu thay vì lấy từ nút đầu tiên
+        console.log("Giá trị của data-apartment-id khi submit:", selectedApartmentId);
+    
+        if (selectedApartmentId) {
+        formData.append("apartment_id", selectedApartmentId);
+        }
     
         fetch("/create_booking/", {
             method: "POST",
@@ -455,7 +454,68 @@
         .catch(error => console.error("Lỗi:", error));
     });
     
+    function confirmDelete(element) {
+        let apartmentId = element.getAttribute("data-id");
+        let roomName = element.getAttribute("data-room_name");
+    
+        let message = `Bạn có chắc chắn muốn xóa căn hộ "${roomName}" không?\n\n⚠️ Lưu ý: Tất cả Booking liên quan cũng sẽ bị xóa!`;
+    
+        if (confirm(message)) {
+            // Nếu người dùng đồng ý, gửi request xóa
+            deleteApartment(apartmentId);
+        }
+    }
+    
+    {% comment %} function deleteApartment(apartmentId) {
+        fetch(`/delete-apartment/${apartmentId}/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Xóa thành công!");
+                location.reload();  // Load lại trang sau khi xóa
+            } else {
+                alert("Có lỗi xảy ra, vui lòng thử lại!");
+            }
+        })
+        .catch(error => console.error("Lỗi:", error));
+    }
           
+     {% endcomment %}
+     function confirmDeleteCustomer(element) {
+        let apartmentId = element.getAttribute("data-id");
+        let roomName = element.getAttribute("data-room_name");
+    
+        let message = `Bạn có chắc chắn muốn xóa toàn bộ khách hàng đã từng đặt căn hộ "${roomName}" không?\n\n⚠️ Lưu ý: Tất cả Booking của khách hàng này cũng sẽ bị xóa!`;
+    
+        if (confirm(message)) {
+            deleteCustomer(apartmentId);
+        }
+    }
+    
+    function deleteCustomer(apartmentId) {
+        fetch(`/delete-customer/${apartmentId}/`, {
+            method: "POST",
+            headers: {
+                 "X-CSRFToken": "{{ csrf_token }}",
+                 "Content-Type": "application/json"
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Xóa khách hàng thành công!");
+                location.reload();
+            } else {
+                alert("Có lỗi xảy ra, vui lòng thử lại!");
+            }
+        })
+        .catch(error => console.error("Lỗi:", error));
+    }
+    
+  
     
 </script>
 

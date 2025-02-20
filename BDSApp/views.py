@@ -30,6 +30,7 @@ def home(request):
     buildings = Building.objects.all()  # Lấy danh sách tất cả tòa nhà
 
     return render(request, 'home.html', {
+        'apartments':apartments,
         'page_obj': page_obj,
         'query': query,
         'buildings': buildings,
@@ -317,3 +318,26 @@ def delete_building(request, building_id):
     # Nếu không có căn hộ, cho phép xóa
     building.delete()
     return redirect('building')
+
+@csrf_exempt
+def delete_customer(request, apartment_id):
+    if request.method == "POST":
+        try:
+            # Tìm tất cả khách hàng đã đặt căn hộ này
+            customers_to_delete = Customer.objects.filter(bookings__apartment_id=apartment_id).distinct()
+
+            # Xóa Booking liên quan trước
+            Booking.objects.filter(apartment_id=apartment_id).delete()
+
+
+            # Xóa khách hàng
+            customers_to_delete.delete()
+            apartment = get_object_or_404(Apartment, id=apartment_id)
+            if not Booking.objects.filter(apartment=apartment).exists():
+                apartment.available = True
+                apartment.save()
+
+            return JsonResponse({"success": True}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Phương thức không hợp lệ"}, status=400)

@@ -47,27 +47,14 @@
             <li class="nav-item">
                 <a href="{% url 'building' %}" class="nav-link menu-link"><i class="bi bi-house"></i> Quản lý toà nhà</a>
             </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link menu-link"><i class="bi bi-people"></i> Nhân Viên <span class="badge bg-secondary"></span></a>
-            </li>
+           
             <li class="nav-item">
                 <a href="{% url 'home' %}" class="nav-link menu-link" data-target="apartmentManagement"><i class="bi bi-briefcase"></i> Quản Lý Căn Hộ</a>
             </li>
             <li class="nav-item">
                 <a href="{% url 'rental_management' %}" class="nav-link" ><i class="bi bi-person"></i> Quản Lý Cho Thuê</a>
             </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link"><i class="bi bi-box"></i> Nhu Cầu Bán/Cho Thuê</a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link"><i class="bi bi-cart"></i> Nhu Cầu Mua/Cần Thuê</a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link"><i class="bi bi-cash"></i> Quản Lý Giao Dịch</a>
-            </li>
-            <li class="nav-item">
-                <a href="#" class="nav-link"><i class="bi bi-clipboard-check"></i> Quản Lý Công Việc</a>
-            </li>
+            
 
     </div>
     <div class="d-flex flex-grow-1 flex-column">
@@ -84,7 +71,7 @@
             </div>
         
             <!-- Tổng số phòng -->
-            <p class="fw-bold">Tổng số phòng: <span class="text-primary">4,873</span> phòng</p>
+            <p class="fw-bold">Tổng số phòng: <span class="text-primary">{{ apartments.count }}</span> phòng</p>
 
             <form class="row g-3 align-items-center">
                 <!-- Ô tìm kiếm -->
@@ -119,8 +106,8 @@
                     <div class="d-flex align-items-center">
                         <!-- Ảnh căn hộ -->
                         {% if apartment.image %}
-                        <img src="{{ apartment.image.url }}" alt="Căn hộ" class="img-thumbnail" style="height: 90px; width: 120px;">
-                    {% endif %}
+                        <img src="{{ apartment.image.url }}" alt="Căn hộ" class="img-thumbnail me-3" style="height: 90px; width: 120px;">
+                        {% endif %}
                     
                         <!-- Thông tin căn hộ -->
                         <div class="flex-grow-1">
@@ -138,7 +125,7 @@
                         </div>
 
                         <!-- Trạng thái & nút Chi tiết -->
-                        <div>
+                        {% comment %} <div>
                             {% if apartment.available %}
                                 <span class="badge bg-success">Còn trống</span>
                             {% else %}
@@ -146,7 +133,7 @@
                                 
                             {% endif %}
                             <button class="btn btn-outline-secondary">👁 Chi tiết</button>
-                        </div>
+                        </div> {% endcomment %}
                         <div class="dropdown">
                             <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-three-dots-vertical"></i> <!-- Icon dấu ba chấm -->
